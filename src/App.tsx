@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import ReactSlider from 'react-slider';
+import { SketchPicker } from 'react-color';
 import { uniq } from 'lodash';
 
 function random0or1(): number {
@@ -16,6 +17,7 @@ function generateGridArray(size: number): GridArray {
 
 type BoxProps = {
   isColored?: boolean,
+  color?: string,
   onClick: Function
 }
 
@@ -29,13 +31,19 @@ const Box = styled.div<BoxProps>`
   height: 50px;
   margin: 4px 4px 0 0;
   border-radius: 10px;
-  background-color: ${({ isColored }) => isColored ? 'blue' : 'black'};
+  background-color: ${({ isColored, color }) => isColored ? color : 'black'};
 `;
 
 const MainContainer = styled.div`
   display: flex;
   align-items: center;
   flex-direction: column;
+
+  .sketch-picker {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+  }
 
   .slider {
     max-width: 200px;
@@ -129,23 +137,37 @@ function calcFilledSets(size: number, gridArray: GridArray): allSetsAccumulator 
 }
 
 const BoxElement = (props: {
-  index: number, indexValue: number, activeIndexValue: number | null,
+  activeIndex: number | null,
+  numberOfAdjacentElements: number | null,
+  boxColor: string,
+  index: number,
+  indexValue: number,
   showSetNumber: (index: number) => number | null
 }) => {
-  const { index, showSetNumber, indexValue, activeIndexValue } = props;
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  return <Box onClick={() => {
-    const numberOfAdjacentElements = showSetNumber(index);
-    setActiveIndex(numberOfAdjacentElements);
-  }} isColored={indexValue === 1}>{activeIndex}</Box>
+  const { activeIndex, boxColor, index, showSetNumber, indexValue, numberOfAdjacentElements } = props;
+  const [adjacentElements, setActiveIndexValue] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (index === activeIndex) {
+      setActiveIndexValue(numberOfAdjacentElements);
+    }
+  }, [activeIndex])
+
+  return <Box onClick={() => { showSetNumber(index) }}
+    isColored={indexValue === 1}
+    color={boxColor}>
+    {adjacentElements}
+  </Box>
 }
 
 // APP
 const App: React.FC = () => {
   const [gridSize, setGridSize] = useState<number>(10);
+  const [boxColor, setBoxColor] = useState("blue");
+  const [gridArray, setGridArray] = useState<GridArray>(generateGridArray(10));
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [numberOfAdjacentElements, setNumberOfAdjacentElements] = useState<number | null>(null);
 
-  const gridArray = generateGridArray(gridSize);
   const sets = calcFilledSets(gridSize, gridArray);
 
   function showSetNumber(index: number): number | null {
@@ -153,23 +175,36 @@ const App: React.FC = () => {
       return set.set.includes(index);
     });
     const numberOfAdjacentElements = clickedSet[0] && clickedSet[0].set.length;
-
+    setActiveIndex(index);
+    setNumberOfAdjacentElements(numberOfAdjacentElements);
     return numberOfAdjacentElements || null;
   };
+
+  function handleChangeComplete(color: { hex: React.SetStateAction<string>; }) {
+    setBoxColor(color.hex);
+  }
 
   return (
     <MainContainer>
       <ReactSlider max={25} defaultValue={10} onChange={(value) => {
-        setGridSize(Number(value))
+        setGridSize(Number(value));
+        setGridArray(generateGridArray(Number(value)));
       }} renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>} />
+      <SketchPicker
+        color={boxColor}
+        onChangeComplete={handleChangeComplete}
+      />
       <GridWrapper size={gridSize}>
         {gridArray.map((el, index) => {
           return <BoxElement
+            boxColor={boxColor}
             key={Math.round(Math.random() * 10000000)}
             index={index}
             indexValue={el.value}
-            activeIndexValue={activeIndex}
-            showSetNumber={showSetNumber} />
+            activeIndex={activeIndex}
+            numberOfAdjacentElements={numberOfAdjacentElements}
+            showSetNumber={showSetNumber}
+          />
         })}
       </GridWrapper>
     </MainContainer>
