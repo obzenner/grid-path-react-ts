@@ -4,12 +4,18 @@ import ReactSlider from 'react-slider';
 import { SketchPicker } from 'react-color';
 import { uniq } from 'lodash';
 
+type GridArray = Array<{ value: number }>;
+type ArrayOfIndexes = Array<number>;
+type Set = {
+  id: number,
+  set: ArrayOfIndexes
+}
+type allSetsAccumulator = Array<Set>;
+
+
 function random0or1(): number {
   return Math.round(Math.random());
 }
-
-type GridArray = Array<{ value: number }>;
-type ArrayOfIndexes = Array<number>;
 
 function generateGridArray(size: number): GridArray {
   return Array.from({ length: size * size }, () => { return { value: random0or1() } });
@@ -117,12 +123,6 @@ function returnAdjacentIndexes(size: number, index: number, array: GridArray) {
   }, initReduceArray);
   return result;
 };
-
-type Set = {
-  id: number,
-  set: ArrayOfIndexes
-}
-type allSetsAccumulator = Array<Set>;
 
 function calcFilledSets(size: number, gridArray: GridArray): allSetsAccumulator {
   const allSetsAccumulator: allSetsAccumulator = [];
