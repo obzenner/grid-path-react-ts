@@ -18,6 +18,7 @@ function generateGridArray(size: number): GridArray {
 type BoxProps = {
   isColored?: boolean,
   color?: string,
+  partOfActiveSet?: boolean,
   onClick: Function
 }
 
@@ -32,6 +33,8 @@ const Box = styled.div<BoxProps>`
   margin: 4px 4px 0 0;
   border-radius: 10px;
   background-color: ${({ isColored, color }) => isColored ? color : 'black'};
+  opacity: ${( { partOfActiveSet }) => partOfActiveSet ? '0.5' : '1'};
+  transition: opacity ${( { partOfActiveSet }) => partOfActiveSet ? `${Math.random()}s ease-in-out` : 'none'};
 `;
 
 const MainContainer = styled.div`
@@ -51,8 +54,10 @@ const MainContainer = styled.div`
     margin: 20px 0;
     height: 30px;
     background-color: #d4d4d4;
+    border-radius: 8px;
 
     .thumb {
+      border-radius: 8px;
       cursor: pointer;
       height: 100%;
       width: 30px;
@@ -113,10 +118,11 @@ function returnAdjacentIndexes(size: number, index: number, array: GridArray) {
   return result;
 };
 
-type allSetsAccumulator = Array<{
+type Set = {
   id: number,
   set: ArrayOfIndexes
-}>;
+}
+type allSetsAccumulator = Array<Set>;
 
 function calcFilledSets(size: number, gridArray: GridArray): allSetsAccumulator {
   const allSetsAccumulator: allSetsAccumulator = [];
@@ -137,6 +143,7 @@ function calcFilledSets(size: number, gridArray: GridArray): allSetsAccumulator 
 }
 
 const BoxElement = (props: {
+  activeSet: Set | null,
   activeIndex: number | null,
   numberOfAdjacentElements: number | null,
   boxColor: string,
@@ -144,17 +151,30 @@ const BoxElement = (props: {
   indexValue: number,
   showSetNumber: (index: number) => number | null
 }) => {
-  const { activeIndex, boxColor, index, showSetNumber, indexValue, numberOfAdjacentElements } = props;
+  const { activeSet,
+    activeIndex,
+    boxColor,
+    index,
+    showSetNumber,
+    indexValue,
+    numberOfAdjacentElements
+  } = props;
   const [adjacentElements, setActiveIndexValue] = useState<number | null>(null);
+  const [partOfActiveSet, setIsPartOfActiveSet] = useState<boolean>(false);
 
   useEffect(() => {
     if (index === activeIndex) {
       setActiveIndexValue(numberOfAdjacentElements);
     }
+
+    if (activeSet && activeSet.set.includes(index)) {
+      setIsPartOfActiveSet(true);
+    }
   }, [activeIndex])
 
   return <Box onClick={() => { showSetNumber(index) }}
     isColored={indexValue === 1}
+    partOfActiveSet={partOfActiveSet}
     color={boxColor}>
     {adjacentElements}
   </Box>
@@ -166,6 +186,7 @@ const App: React.FC = () => {
   const [boxColor, setBoxColor] = useState("blue");
   const [gridArray, setGridArray] = useState<GridArray>(generateGridArray(10));
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [activeSet, setActiveSet] = useState<Set | null>(null);
   const [numberOfAdjacentElements, setNumberOfAdjacentElements] = useState<number | null>(null);
 
   const sets = calcFilledSets(gridSize, gridArray);
@@ -175,6 +196,7 @@ const App: React.FC = () => {
       return set.set.includes(index);
     });
     const numberOfAdjacentElements = clickedSet[0] && clickedSet[0].set.length;
+    setActiveSet(clickedSet[0]);
     setActiveIndex(index);
     setNumberOfAdjacentElements(numberOfAdjacentElements);
     return numberOfAdjacentElements || null;
@@ -182,6 +204,8 @@ const App: React.FC = () => {
 
   function handleChangeComplete(color: { hex: React.SetStateAction<string>; }) {
     setBoxColor(color.hex);
+    setActiveIndex(null);
+    setActiveSet(null);
   }
 
   return (
@@ -189,6 +213,8 @@ const App: React.FC = () => {
       <ReactSlider max={25} defaultValue={10} onChange={(value) => {
         setGridSize(Number(value));
         setGridArray(generateGridArray(Number(value)));
+        setActiveIndex(null);
+        setActiveSet(null);
       }} renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>} />
       <SketchPicker
         color={boxColor}
@@ -204,6 +230,7 @@ const App: React.FC = () => {
             activeIndex={activeIndex}
             numberOfAdjacentElements={numberOfAdjacentElements}
             showSetNumber={showSetNumber}
+            activeSet={activeSet}
           />
         })}
       </GridWrapper>
