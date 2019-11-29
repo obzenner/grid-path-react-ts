@@ -1326,6 +1326,21 @@
   dependencies:
     "@types/react" "*"
 
+"@types/react-motion@*":
+  version "0.0.29"
+  resolved "https://registry.yarnpkg.com/@types/react-motion/-/react-motion-0.0.29.tgz#1a22e11bc1452150e8aa58463f72dd921ff10721"
+  integrity sha512-MD1DbdcDKruR0zz5Z0XIlrkPdjDMgYx0AHhbaoTBpDirUTt8Bd7x6OFE458nEINZxfPW0EcEOw2O8S/WwGNLsA==
+  dependencies:
+    "@types/react" "*"
+
+"@types/react-slider@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@types/react-slider/-/react-slider-1.0.0.tgz#bdb29573d6cee2b269ff2814b3cadd08f5dc48d5"
+  integrity sha512-OQpKbS1J96UwUGOqMiVedFM5ds73HQmYufL3yEoLQ51NCUof2A2NQqpeu5U1EwZQI3MhERU78uXhKJzY7Lbqbw==
+  dependencies:
+    "@types/react" "*"
+    "@types/react-motion" "*"
+
 "@types/react@*", "@types/react@16.9.13":
   version "16.9.13"
   resolved "https://registry.yarnpkg.com/@types/react/-/react-16.9.13.tgz#b3ea5dd443f4a680599e2abba8cc66f5e1ce0059"
@@ -8221,6 +8236,11 @@ react-scripts@3.2.0:
     workbox-webpack-plugin "4.3.1"
   optionalDependencies:
     fsevents "2.0.7"
+
+react-slider@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/react-slider/-/react-slider-1.0.1.tgz#4cb212d31c35d804805e31f02ce37771e95d5d45"
+  integrity sha512-SI2anLzeKlFxnntoM93VXrf3ll9uL/TYjIJB6PsQVp4mDVt2VfWyGtMoUvK/ir/PnjuirNtF1pU3cG9XCezfBA==
 
 react@^16.12.0:
   version "16.12.0"
