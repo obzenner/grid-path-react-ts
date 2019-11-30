@@ -34,13 +34,18 @@ const Box = styled.div<BoxProps>`
   align-items: center;
   cursor: pointer;
   color: white;
+  font-size: 25px;
+  text-shadow: 1px 2px #000;
   width: 50px;
   height: 50px;
   margin: 4px 4px 0 0;
   border-radius: 10px;
   background-color: ${({ isColored, color }) => isColored ? color : 'black'};
-  opacity: ${( { partOfActiveSet }) => partOfActiveSet ? '0.5' : '1'};
-  transition: opacity ${( { partOfActiveSet }) => partOfActiveSet ? `${Math.random()}s ease-in-out` : 'none'};
+  ${({ partOfActiveSet }) => partOfActiveSet &&`
+    opacity: ${partOfActiveSet ? '0.5' : '1'};
+    transform: ${partOfActiveSet ? `scale(0.9)` : 'none'};
+    transition: opacity ${partOfActiveSet ? `${Math.random()}s ease-in-out` : 'none'}, transform ${partOfActiveSet ? `${Math.random()}s ease-in-out` : 'none'};
+  `}
 `;
 
 const MainContainer = styled.div`
