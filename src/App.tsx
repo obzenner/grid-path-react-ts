@@ -41,7 +41,7 @@ const Box = styled.div<BoxProps>`
   margin: 4px 4px 0 0;
   border-radius: 10px;
   background-color: ${({ isColored, color }) => isColored ? color : 'black'};
-  ${({ partOfActiveSet }) => partOfActiveSet &&`
+  ${({ partOfActiveSet }) => partOfActiveSet && `
     opacity: ${partOfActiveSet ? '0.5' : '1'};
     transform: ${partOfActiveSet ? `scale(0.9)` : 'none'};
     transition: opacity ${partOfActiveSet ? `${Math.random()}s ease-in-out` : 'none'}, transform ${partOfActiveSet ? `${Math.random()}s ease-in-out` : 'none'};
@@ -86,64 +86,61 @@ const GridWrapper = styled.div<{ size: number }>`
   grid-template-columns: ${({ size }) => `repeat(${size}, 1fr)`};
 `;
 
+function returnAdjacentIndexes(size: number, index: number, array: GridArray) {
+  // horizontal and vertical indexes to check
+  const adjacentIndexes = [index - 1, index + 1, index - size, index + size];
+  const rowNumber = Math.floor(index / size);
+  const accumulator: Array<number> = [];
+
+  return adjacentIndexes.reduce((acc, adjacentIndex, i) => {
+    const isBleedingHorizontally =
+      (i === 0 || i === 1) &&
+      Math.floor(index / size) === rowNumber &&
+      Math.floor(adjacentIndex / size) !== rowNumber;
+
+    const shouldAddIndex = array[index] && array[index].value === 1 &&
+      array[adjacentIndex] && array[adjacentIndex].value === 1 && !isBleedingHorizontally;
+
+    return shouldAddIndex ? [...acc, adjacentIndex] : acc;
+  }, accumulator);
+};
+
 // Try to rewrite with reduce
-function getSetForId(size: number, arrayForIndex: ArrayOfIndexes, gridArray: GridArray) {
+function getSetForId(adjacentIndexes: ArrayOfIndexes, size: number, gridArray: GridArray): ArrayOfIndexes {
   let resultAccumulator: ArrayOfIndexes = [];
 
   function getSet(arr: ArrayOfIndexes): ArrayOfIndexes {
-    const toCheck = arr.filter(i => {
-      return !resultAccumulator.includes(i);
-    })
-    if (toCheck.length) {
+    const indexesToCheck = arr.filter(i => !resultAccumulator.includes(i));
+
+    if (indexesToCheck.length) {
       resultAccumulator = uniq([...resultAccumulator, ...arr]);
-      toCheck.forEach(i => {
-        getSet(returnAdjacentIndexes(size, i, gridArray));
+      indexesToCheck.forEach(i => {
+        const adjacentIndexes = returnAdjacentIndexes(size, i, gridArray);
+        getSet(adjacentIndexes);
       });
     } else {
       return uniq(resultAccumulator);
     }
+
     return resultAccumulator;
   }
 
-  return getSet(arrayForIndex);
+  return getSet(adjacentIndexes);
 }
-
-function returnAdjacentIndexes(size: number, index: number, array: GridArray) {
-  // horizontal and vertical indexes to check
-  const conditionalIndexes = [index - 1, index + 1, index - size, index + size];
-  const rowNumber = Math.floor(index / size);
-  const initReduceArray: Array<number> = [];
-
-  const result = conditionalIndexes.reduce((acc, cond, condIndex) => {
-    const isBleedingHorizontally =
-      (condIndex === 0 || condIndex === 1) &&
-      Math.floor(index / size) === rowNumber && Math.floor(cond / size) !== rowNumber;
-    if (array[index] && array[index].value === 1 &&
-      array[cond] && array[cond].value === 1 &&
-      !isBleedingHorizontally) {
-      return [...acc, cond];
-    } else {
-      return acc;
-    }
-  }, initReduceArray);
-  return result;
-};
 
 function calcFilledSets(size: number, gridArray: GridArray): allSetsAccumulator {
   const allSetsAccumulator: allSetsAccumulator = [];
   const allSetsReducer = gridArray.reduce((acc, curr, index) => {
+    // get closest adjacent indexes for current index
+    const adjacentIndexes = returnAdjacentIndexes(size, index, gridArray);
     const set = {
       id: index,
-      set: getSetForId(size, returnAdjacentIndexes(size, index, gridArray), gridArray)
+      set: getSetForId(adjacentIndexes, size, gridArray)
     }
     const shouldNotInlcudeSet = acc.find(i => i.set.includes(index));
-    if (shouldNotInlcudeSet) {
-      return acc;
-    } else {
-      acc.push(set);
-      return acc;
-    }
+    return shouldNotInlcudeSet ? acc : [...acc, set];
   }, allSetsAccumulator);
+  // remove empty sets in return
   return allSetsReducer.filter(i => i.set.length > 0);
 }
 
